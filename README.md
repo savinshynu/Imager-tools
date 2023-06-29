@@ -1,4 +1,4 @@
-# Imager-tools for Orville Wideband Imager at LWA-SB
+# Imager-tools for Orville Wideband Imager at LWA-SV station
 - Analyzing tools for lwa all-sky images 
 
 - Contains most of the tools required to analyze all-sky images from the LWA data

@@ -1,3 +1,9 @@
+"""
+plots the power response as a function of elevation
+
+"""
+
+
 import numpy as np
 import sys, glob
 import h5py

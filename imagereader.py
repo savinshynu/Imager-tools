@@ -1,3 +1,8 @@
+"""
+Plots the difference between the narrowband and broadband images
+
+"""
+
 import numpy as np
 from OrvilleImageDB import OrvilleImageDB
 import sys

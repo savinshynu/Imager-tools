@@ -1,3 +1,8 @@
+"""
+Reads in a .oims file and writes a frequency average images to a hdf5 file
+
+"""
+
 import glob
 import os
 import numpy as np

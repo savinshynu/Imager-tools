@@ -1,3 +1,7 @@
+"""
+Sensitivity calculation in Stokes I and V
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 #from sliding_rfi_flagger_man import main

@@ -1,3 +1,8 @@
+"""
+Plots the instrumental response, taken from LSL
+
+"""
+
 from scipy.interpolate import interp1d
 import numpy
 from lsl.common import stations

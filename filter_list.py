@@ -1,3 +1,10 @@
+"""
+Filter nearby VLSS sources, low SNR scintillation events,
+narrowband RFIs and airplane from the transient search list in Stokes I
+
+"""
+
+
 import time
 import os
 import numpy as np

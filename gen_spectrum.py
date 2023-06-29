@@ -1,3 +1,10 @@
+"""
+Plot the broadband spectrum of a candidate event from Orville
+given the coordinates and time
+
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from sliding_rfi_flagger_man import main

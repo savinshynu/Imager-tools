@@ -1,3 +1,9 @@
+"""
+Flags narrowband RFI from the candidate list in stokes V
+
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from sliding_rfi_flagger_adv import main

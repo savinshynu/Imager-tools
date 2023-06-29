@@ -1,3 +1,9 @@
+"""
+Get the scintillation index movie of 
+A class sources and produces a bunch of plots to understand the quality of calibration
+"""
+
+
 import numpy as np
 import sys, glob
 import h5py

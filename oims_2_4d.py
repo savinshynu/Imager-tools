@@ -1,3 +1,7 @@
+"""
+Converting an oims image file to hdf5 file format
+"""
+
 import glob
 import os
 import numpy as np

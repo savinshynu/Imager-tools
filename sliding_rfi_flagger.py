@@ -1,3 +1,9 @@
+"""
+Narrowband RFI flagging with sliding median window
+
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 #import scipy.interpolate as ip

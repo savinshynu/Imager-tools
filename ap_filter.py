@@ -1,3 +1,8 @@
+"""
+Filtering the slowly moving airplanes in the images
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 import glob

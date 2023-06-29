@@ -1,3 +1,10 @@
+"""
+Calculating the light curves after flagging the bad channels using a 
+sliding median window
+
+"""
+
+
 import numpy as np
 import sys
 import os

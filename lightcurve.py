@@ -1,3 +1,8 @@
+"""
+Plot the light curve of an event
+
+"""
+
 import numpy as np
 import sys
 import matplotlib.pyplot as plt

@@ -1,3 +1,9 @@
+"""
+Function to filter low SNR scintillating source based on the
+light curves of events in Stokes I
+"""
+
+
 import numpy as np
 import sys
 import matplotlib.pyplot as plt

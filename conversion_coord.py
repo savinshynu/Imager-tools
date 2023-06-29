@@ -1,3 +1,8 @@
+"""
+Different coordinate conversion scripts required for the 
+transient searches with images
+"""
+
 import numpy as np
 
 lat1= 34.0689         # coordinates for LWA station 1

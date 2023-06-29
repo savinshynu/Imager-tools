@@ -1,3 +1,10 @@
+"""
+Print scintillation index of a day based on the 
+spectral observation of A class sources
+
+"""
+
+
 import numpy as np
 import sys, glob
 import h5py

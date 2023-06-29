@@ -1,3 +1,8 @@
+"""
+Gaussian fitting of sources from images
+
+"""
+
 import numpy as np
 from scipy import optimize
 

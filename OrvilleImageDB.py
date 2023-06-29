@@ -1,3 +1,9 @@
+"""
+Class to read the .oims image file from Orville
+
+"""
+
+
 from __future__ import print_function, division, absolute_import
 import sys
 if sys.version_info > (3,):

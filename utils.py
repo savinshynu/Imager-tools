@@ -1,3 +1,9 @@
+"""
+A number of utility functions used in the transient search with Orville
+
+"""
+
+
 import numpy as np
 from OrvilleImageDB import OrvilleImageDB
 import sys

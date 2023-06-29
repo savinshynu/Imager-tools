@@ -1,3 +1,9 @@
+"""
+Go through the oims images in a day, collect the spectral responses of 
+A class sources for calibration purposes and write them into a hdf5 file
+
+"""
+
 import glob
 import os
 import numpy as np

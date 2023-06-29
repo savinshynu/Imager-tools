@@ -1,3 +1,8 @@
+"""
+Reads in the hdf5 file in stokes V and conducts the transient search and 
+list out the candidate events as text files
+"""
+
 import numpy as np
 import sys
 from lsl import astro

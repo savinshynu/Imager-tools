@@ -1,13 +1,12 @@
 """
 Reads the hdf5 files
 """
-
-import numpy as np
 import sys
-import matplotlib.pyplot as plt
-#import pyfits
+import numpy as np
 import h5py
 import time
+import matplotlib.pyplot as plt
+#import pyfits
 from conversion_coord import pix2eq as getcoord, eq2pix as trackcoord,pix2hrz
 from utils import ang_dist_pix
 from scipy.stats import scoreatpercentile as sc

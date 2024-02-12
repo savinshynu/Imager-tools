@@ -41,21 +41,21 @@ for n,el_low in enumerate(el_range):
 
     ind1  = np.where((el_dat[:,source] > el_low) & (el_dat[:,source] < (el_low + 1)) & (np.int_(head_dat[:,0])==freq_in))[0]
     #print len(ind1)
-    
+
     if len(ind1) > 0:
-       med_dat_source = np.nanmedian(im_dat[ind1,source,:,stokes],axis = 0)
-       sig_dev_source = np.zeros(ind1.shape)
+        med_dat_source = np.nanmedian(im_dat[ind1,source,:,stokes],axis = 0)
+        sig_dev_source = np.zeros(ind1.shape)
 
-       for i,x in enumerate(ind1):
-           dev_source = im_dat[x,source,:,stokes] / med_dat_source
-           sig_dev_source[i] = np.nanstd(dev_source)
+        for i,x in enumerate(ind1):
+            dev_source = im_dat[x,source,:,stokes] / med_dat_source
+            sig_dev_source[i] = np.nanstd(dev_source)
 
-       med_sig_dev_source =  np.nanmean(sig_dev_source)
+        med_sig_dev_source =  np.nanmean(sig_dev_source)
 
-       #if med_sig_dev_source < 0.05:
-       #   print "good time at elavation %d" % (el_low)
+        #if med_sig_dev_source < 0.05:
+        #   print "good time at elavation %d" % (el_low)
 
-       mean_el_dat[n] = med_sig_dev_source
+        mean_el_dat[n] = med_sig_dev_source
 
 
 plt.scatter(el_range,mean_el_dat) 

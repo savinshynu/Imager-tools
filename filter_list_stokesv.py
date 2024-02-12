@@ -36,6 +36,11 @@ def search_vlss(ra,dec):
 """
 
 def search_vlss(ra,dec):
+    """
+    Returns the repeatitio of a source
+    parametes:
+    ra, dec - source coordinates
+    """
     ra_in = np.ones(vlss.shape[0])*ra
     dec_in = np.ones(vlss.shape[0])*dec
     diff = ang_dist(ra_in, dec_in, vlss[:,0], vlss[:,1])
@@ -67,13 +72,13 @@ for filename1 in files1:
    
     k = 0
     for i in range(list1.shape[0]):
-        if search_vlss(list1[i,0],list1[i,1]) == 0:
+        if search_vlss(list1[i,0],list1[i,1]) == 0: # searching for VLASS sources
            list2[k,:] = list1[i,:]
            k += 1
     list2 = list2[:k,:]
     
     
-    list3 = filter_snr(list2,day)
+    list3 = filter_snr(list2,day) # Filter low SNR events
     #np.savetxt(path2+"unpol_"+os.path.basename(filename1), list3,'%10.2f')
     #np.savetxt(path2+"pol_"+os.path.basename(filename1), list4,'%10.2f')
     #list3 = np.loadtxt(path2+"unpol_"+os.path.basename(filename1))
@@ -82,9 +87,9 @@ for filename1 in files1:
     ext = os.path.basename(filename1)
     ext_num = int(ext.split("_")[1][:2]) 
  
-    list4 = fnr(list3,ext_num,day)
+    list4 = fnr(list3,ext_num,day) # filter RFI events
     
-    list5 = filter_planes(list4,day,stokes)
+    list5 = filter_planes(list4,day,stokes) # Filter airplanes
 
     np.savetxt(path2+os.path.basename(filename1), list5,'%10.2f')
     #np.savetxt(path2+"unpol_"+os.path.basename(filename1), list6,'%10.2f')

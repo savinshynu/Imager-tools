@@ -1,8 +1,7 @@
 """
-Reads in the hdf5 file in stokes I and conducts the transient search and 
+Reads in the hdf5 file in stokes V and conducts the transient search and 
 list out the candidate events as text files
 """
-
 
 import numpy as np
 import sys
@@ -21,7 +20,7 @@ def findtranspim(data,time,dur,sigma,sz,size,runav,psize,lat,lon,cent_az,cent_al
     A = np.ones((data.shape[0],data.shape[1])) # mask for the horizon
     for a in xrange(A.shape[0]):
         for b in xrange(A.shape[1]):
-            if (float(a)-(A.shape[0]/2.0))**2 + (float(b)-(A.shape[0]/2.0))**2 >  ((180*np.cos(30.0*(np.pi/180.0)))/(np.pi*psize))**2: #masking below 30 degrees (180* cos(theta)/(np.pi * psize)
+            if (float(a)-(A.shape[0]/2.0))**2 + (float(b)-(A.shape[0]/2.0))**2 >  ((180*np.cos(30.0*(np.pi/180.0)))/(np.pi*psize))**2: # making below 30 degrees (180* cos(theta)/(np.pi * psize)
             #if ((float(a)-(A.shape[0]/2.0))/(140.0/np.pi))**2 + ((float(b)-(A.shape[0]/2.0))/(140.0/np.pi))**2 > 1.0:
                A[a,b] = 0
 
@@ -289,8 +288,8 @@ def findtranspim(data,time,dur,sigma,sz,size,runav,psize,lat,lon,cent_az,cent_al
             rak,deck = getcoord(ucol,urow,sz,psize,np.tile(ttime[0,k],ucol.shape),np.tile(ttime[1,k],ucol.shape),np.tile(ttime[2,k],ucol.shape),np.tile(ttime[3,k],ucol.shape),lat,lon,cent_az,cent_alt)
 
             if np.any(np.isnan(rak)):
-                print urow[np.isnan(rak)]
-                print ucol[np.isnan(rak)]
+                print (urow[np.isnan(rak)])
+                print (ucol[np.isnan(rak)])
 
         
         else:
@@ -298,8 +297,8 @@ def findtranspim(data,time,dur,sigma,sz,size,runav,psize,lat,lon,cent_az,cent_al
 
             signifk = signifk2
             if np.any(np.isnan(rak)):
-                print urow2[np.isnan(rak)]
-                print ucol2[np.isnan(rak)]
+                print (urow2[np.isnan(rak)])
+                print (ucol2[np.isnan(rak)])
 
 
 
@@ -383,13 +382,13 @@ dirc  = '/leo/savin/wide_lwasv/oims_wide/standard_sub/'
 mjd = sys.argv[1]
 path = dirc + 'images_hdf5/'+str(mjd)+'/*.hdf5'
 files = sorted(glob.glob(path))
-path_2 = dirc + 'transients/'+str(mjd)+'/'
+path_2 = dirc + 'transients_stokesI/'+str(mjd)+'/'
 
 
 
 for filename in files:
 
-    print filename
+    print (filename)
     #dur = 4 #number of previous images to subtract from each image
     sig = 6 # sigma level for thresholding 
     source_size = 6 #estimate of the number of pixels that need to be subtracted off surrounding a source
@@ -413,7 +412,7 @@ for filename in files:
 
     time = np.zeros((4,ints),dtype = np.float32)
     data = np.zeros((xSize,ySize,ints),dtype=np.float32)
-    stokes = 0 # right now we only do Stokes I, but we might want to do all 4 parameters, or at least I and V
+    stokes = 0 # only do Stokes I
 
 
 
@@ -523,7 +522,7 @@ for filename in files:
 
       
         else:
-            print 'Not enough images in db'
+            print ('Not enough images in db')
 
        
 
@@ -534,7 +533,7 @@ if something:
     try:
         os.mkdir(path_2)
     except OSError:
-        print 'directry already exists'
+        print ('directry already exists')
 
 
     try:
@@ -542,7 +541,7 @@ if something:
         np.savetxt(path_2 + str(int(mjd)) + '_05s.txt',np.concatenate((np.reshape(RA5,(1,-1)).T,np.reshape(DEC5,(1,-1)).T,TIME5.T),1),'%10.2f')
 
     except NameError:
-        print 'no 5s transients'
+        print ('no 5s transients')
 
     try:
 
@@ -550,7 +549,7 @@ if something:
 
     except NameError:
 
-        print 'no 15s transients'
+        print ('no 15s transients')
 
 
     try:
@@ -559,4 +558,4 @@ if something:
 
     except NameError:
 
-        print 'no 60s transients'
+        print ('no 60s transients')

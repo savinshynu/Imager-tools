@@ -3,21 +3,19 @@ Plot the broadband spectrum of a candidate event from Orville
 given the coordinates and time
 
 """
-
-
+import os
+import glob
+import sys
+import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 from sliding_rfi_flagger_man import main
 from lsl import astro
-import glob
-import sys
 from scipy.optimize import curve_fit
 from mad import median_absolute_deviation as mad
-import os
 from conversion_coord import pix2eq as getcoord, eq2pix as trackcoord
 from OrvilleImageDB import OrvilleImageDB
 from utils import mask_image,maxi_sub,maxi_unsub
-import h5py
 from lc_correct_man import snr_in_lc
 from collect_resp_data import collect_resp
 
@@ -58,150 +56,150 @@ par_jy = [[4.695,0.085,-0.178],[5.745,-0.770,0],[5.023,-0.856,0],[3.915,-0.299,0
 
 def flux_jy_baars(v): # From Baars et al. paper values
 
-    a,b,c = par_jy[source]
+   a,b,c = par_jy[source]
 
-    log_s = a + b*np.log10(v) + c*(np.log10(v)**2)
+   log_s = a + b*np.log10(v) + c*(np.log10(v)**2)
 
-    return 10**log_s
+   return 10**log_s
 
 
 
 def flag_narrow_rfi(capt):
        
-    ra = float(sys.argv[1])
-    dec = float(sys.argv[2])
-    mjd = float(sys.argv[3])
-    h = float(sys.argv[4])
-    m = float(sys.argv[5])
-    s = float(sys.argv[6])
-           
-    mjd =int(mjd)    
-    hint = int(h)
-    mint = int(m)
-   
-    if (m-mint) == 0:
-       sint = int(s)
-
-    elif (m-mint) != 0:
-       sec = s+(m-mint)*60.0
-       if sec >= 60.0:
-          sec = int(sec%60.0)
-          mint += 1
-          if mint >= 60:
-             mint = mint%60
-             hint += 1
-       sint = int(sec)
-  
-    t_in = hint*3600.0 + mint*60.0 + sint
-    
-    if capt not in [5,15,60]:
-       sys.exit("Wrong integration length")
-
-    if capt == 5:
-       diff_tm = 3
-    elif capt == 15:
-       diff_tm = 8
-    elif capt == 60:
-       diff_tm = 30
-
-    stokes = 0
-
-    #find the corresponding .hdf5 file for the time and .oims file fo image
-    path1 = '/leo/savin/wide_lwasv/oims_wide/standard_sub/images_hdf5/'+str(mjd)+'/'+str(mjd)+'_'+str(format(hint,'02d'))+'*.hdf5'
-    files1  = sorted(glob.glob(path1))
-
-    for filename1 in files1:
-        hf=h5py.File(filename1,'r')
-        tm_ind = hf.get('time')
-        header = hf.get('header')
-        head  =  header[0,:]
-        ints = head[0] #number of integrations
-        ngrid  = int(head[1]) #size of images (x-axis)
-        psize = head[2] #angular size of a pixel (at zenith)
-        nchan = int(head[3])
-        print nchan
-        cent_az = head[9]
-        cent_alt = head[10]
-        t_comp = tm_ind[:,1]*3600.0 + tm_ind[:,2]*60.0 + tm_ind[:,3]
-        try:
-           peak = np.where((abs(t_comp-t_in) < diff_tm))[0]
-        except IndexError:
-           continue
-        if len(peak) == 0:
-           continue
-        peak_ind = int(np.median(peak))
-        noise = np.array(range(max(0,peak_ind-15),max(0,peak_ind-5))+range(min(ints,peak_ind+5),min(ints,peak_ind+15))) 
-        #noise = np.array(range(598,608)+range(630,640)) 
-        print peak
-        print noise
-        #print peak.shape[0],noise.shape[0],nchan, ngrid
-    
-        file_ext1 = os.path.basename(filename1)
-        file_ext1 = os.path.splitext(file_ext1)[0]
-        filename2 = '/leo/savin/wide_lwasv/oims_wide/images/'+str(mjd)+'/'+file_ext1+'.oims' 
-        
-        dset = np.zeros((peak.shape[0],nchan,4,ngrid,ngrid))
-        dset_avg = np.zeros((noise.shape[0],nchan,4,ngrid,ngrid))
-        db = OrvilleImageDB(filename2,'r')
-     
-        for index in range(peak.shape[0]):
-            
-            try:
-                hdr, dat = db.__getitem__(peak[index])
-            except RuntimeError:
-                print 'bad database at %d integration' % (i)
-                continue
-
-            dset[index,:,:,:,:] = np.transpose(dat[:,:,:,:],axes=(0,1,3,2))
+   ra = float(sys.argv[1])
+   dec = float(sys.argv[2])
+   mjd = float(sys.argv[3])
+   h = float(sys.argv[4])
+   m = float(sys.argv[5])
+   s = float(sys.argv[6])
          
-        start_freq = hdr['start_freq']/1e+6
-        bandwidth = hdr['bandwidth']/1e+6
-        stop_freq = hdr['stop_freq']/1e+6 + bandwidth
-        freq_chan  = np.arange(start_freq,stop_freq,bandwidth)
-        print start_freq, stop_freq
+   mjd =int(mjd)    
+   hint = int(h)
+   mint = int(m)
 
-        for index in range(noise.shape[0]):
-            
-            try:
-                hdr, dat = db.__getitem__(noise[index])
-            except RuntimeError:
-                print 'bad database at %d integration' % (i)
-                continue
+   if (m-mint) == 0:
+      sint = int(s)
 
-            dset_avg[index,:,:,:,:] = np.transpose(dat[:,:,:,:],axes=(0,1,3,2))
+   elif (m-mint) != 0:
+      sec = s+(m-mint)*60.0
+      if sec >= 60.0:
+         sec = int(sec%60.0)
+         mint += 1
+         if mint >= 60:
+            mint = mint%60
+            hint += 1
+      sint = int(sec)
 
-        if sys.argv[8]=='u':
-           sub_dat = np.mean(dset[:,:,stokes,:,:],axis=(0))
-        elif sys.argv[8]=='s':
-           sub_dat = np.mean(dset[:,:,stokes,:,:],axis=(0)) - np.mean(dset_avg[:,:,stokes,:,:],axis=(0))
+   t_in = hint*3600.0 + mint*60.0 + sint
+   
+   if capt not in [5,15,60]:
+      sys.exit("Wrong integration length")
 
-        dat_img = np.mean(sub_dat,axis=0)
-        #lat = 34.3491 #Station Latitude (of LWA-SV)
-        #lon = -106.886  #Station Latitude (of LWA-SV)
-        #time = np.reshape(np.array([mjd,hint,mint,sint]),(4,1))
-        #dat_im_mask,dat_im_mask_nohrz = mask_image(dat_img,time,psize,lat,lon,cent_az,cent_alt) 
+   if capt == 5:
+      diff_tm = 3
+   elif capt == 15:
+      diff_tm = 8
+   elif capt == 60:
+      diff_tm = 30
 
-        plt.pcolormesh(np.transpose(dat_img),cmap='jet')
-        plt.show()
-        time = np.reshape(np.array([mjd,hint,mint,sint]),(4,1))
+   stokes = 0
 
-        lat = 34.3491 #Station Latitude (of LWA-SV)
-        lon = -106.886  #Station Latitude (of LWA-SV)
+   #find the corresponding .hdf5 file for the time and .oims file fo image
+   path1 = '/leo/savin/wide_lwasv/oims_wide/standard_sub/images_hdf5/'+str(mjd)+'/'+str(mjd)+'_'+str(format(hint,'02d'))+'*.hdf5'
+   files1  = sorted(glob.glob(path1))
 
-        xp,yp,alt = trackcoord(ra,dec,time[0,:],time[1,:],time[2,:],time[3,:],ngrid,psize,lat,lon,cent_az,cent_alt)
-
-        xa,ya = maxi_sub(dat_img,xp,yp)
-        print xp,yp,xa,ya
-    
+   for filename1 in files1:
+      hf=h5py.File(filename1,'r')
+      tm_ind = hf.get('time')
+      header = hf.get('header')
+      head  =  header[0,:]
+      ints = head[0] #number of integrations
+      ngrid  = int(head[1]) #size of images (x-axis)
+      psize = head[2] #angular size of a pixel (at zenith)
+      nchan = int(head[3])
+      print nchan
+      cent_az = head[9]
+      cent_alt = head[10]
+      t_comp = tm_ind[:,1]*3600.0 + tm_ind[:,2]*60.0 + tm_ind[:,3]
+      try:
+         peak = np.where((abs(t_comp-t_in) < diff_tm))[0]
+      except IndexError:
+         continue
+      if len(peak) == 0:
+         continue
+      peak_ind = int(np.median(peak))
+      noise = np.array(range(max(0,peak_ind-15),max(0,peak_ind-5))+range(min(ints,peak_ind+5),min(ints,peak_ind+15))) 
+      #noise = np.array(range(598,608)+range(630,640)) 
+      print peak
+      print noise
+      #print peak.shape[0],noise.shape[0],nchan, ngrid
+   
+      file_ext1 = os.path.basename(filename1)
+      file_ext1 = os.path.splitext(file_ext1)[0]
+      filename2 = '/leo/savin/wide_lwasv/oims_wide/images/'+str(mjd)+'/'+file_ext1+'.oims' 
       
-        plt.plot((np.arange(sub_dat.shape[0])),sub_dat[:,xa,ya],color='blue', marker='.', linestyle='solid')
-        #plt.xlabel("Frequency (MHz)")
-        #plt.ylabel("Flux_response")
-        plt.show()
-        gd = main(sub_dat[:,xa,ya])
-        db.close()   
-        hf.close()
-        return freq_chan[gd], gd, sub_dat[gd,xa,ya]
+      dset = np.zeros((peak.shape[0],nchan,4,ngrid,ngrid))
+      dset_avg = np.zeros((noise.shape[0],nchan,4,ngrid,ngrid))
+      db = OrvilleImageDB(filename2,'r')
+   
+      for index in range(peak.shape[0]):
+         
+         try:
+               hdr, dat = db.__getitem__(peak[index])
+         except RuntimeError:
+               print 'bad database at %d integration' % (i)
+               continue
+
+         dset[index,:,:,:,:] = np.transpose(dat[:,:,:,:],axes=(0,1,3,2))
+      
+      start_freq = hdr['start_freq']/1e+6
+      bandwidth = hdr['bandwidth']/1e+6
+      stop_freq = hdr['stop_freq']/1e+6 + bandwidth
+      freq_chan  = np.arange(start_freq,stop_freq,bandwidth)
+      print start_freq, stop_freq
+
+      for index in range(noise.shape[0]):
+         
+         try:
+               hdr, dat = db.__getitem__(noise[index])
+         except RuntimeError:
+               print 'bad database at %d integration' % (i)
+               continue
+
+         dset_avg[index,:,:,:,:] = np.transpose(dat[:,:,:,:],axes=(0,1,3,2))
+
+      if sys.argv[8]=='u':
+         sub_dat = np.mean(dset[:,:,stokes,:,:],axis=(0))
+      elif sys.argv[8]=='s':
+         sub_dat = np.mean(dset[:,:,stokes,:,:],axis=(0)) - np.mean(dset_avg[:,:,stokes,:,:],axis=(0))
+
+      dat_img = np.mean(sub_dat,axis=0)
+      #lat = 34.3491 #Station Latitude (of LWA-SV)
+      #lon = -106.886  #Station Latitude (of LWA-SV)
+      #time = np.reshape(np.array([mjd,hint,mint,sint]),(4,1))
+      #dat_im_mask,dat_im_mask_nohrz = mask_image(dat_img,time,psize,lat,lon,cent_az,cent_alt) 
+
+      plt.pcolormesh(np.transpose(dat_img),cmap='jet')
+      plt.show()
+      time = np.reshape(np.array([mjd,hint,mint,sint]),(4,1))
+
+      lat = 34.3491 #Station Latitude (of LWA-SV)
+      lon = -106.886  #Station Latitude (of LWA-SV)
+
+      xp,yp,alt = trackcoord(ra,dec,time[0,:],time[1,:],time[2,:],time[3,:],ngrid,psize,lat,lon,cent_az,cent_alt)
+
+      xa,ya = maxi_sub(dat_img,xp,yp)
+      print xp,yp,xa,ya
+   
+   
+      plt.plot((np.arange(sub_dat.shape[0])),sub_dat[:,xa,ya],color='blue', marker='.', linestyle='solid')
+      #plt.xlabel("Frequency (MHz)")
+      #plt.ylabel("Flux_response")
+      plt.show()
+      gd = main(sub_dat[:,xa,ya])
+      db.close()   
+      hf.close()
+      return freq_chan[gd], gd, sub_dat[gd,xa,ya]
                
 if sys.argv[9] == 'c':
 

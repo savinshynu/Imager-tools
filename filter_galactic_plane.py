@@ -1,20 +1,27 @@
 #!/usr/bin/env python
-
+"""
+Scripts used for modelling the diffused emission
+"""
 import os
 import sys
 import ephem
 import numpy
 
 from astropy import wcs
-
 from lsl.astro import MJD_OFFSET, DJD_OFFSET
-
 from OrvilleImageDB import OrvilleImageDB
-
 from matplotlib import pyplot as plt
 
 
 def separation(ra1,dec1,ra2,dec2):
+    """
+    Calculates angular seperation between equatorial coordinates
+    Retuns angular disance in degrees
+
+    Parameters:
+    ra1, dec1 - first coordinates in degrees
+    ra2, dec2 - second coordinates in degrees
+    """
     x=numpy.sin(dec1*(numpy.pi/180.0))*numpy.sin(dec2*(numpy.pi/180.0))
     y=numpy.cos(dec1*(numpy.pi/180.0))*numpy.cos(dec2*(numpy.pi/180.0))*numpy.cos((ra1-ra2)*(numpy.pi/180.0))
     z=x+y
@@ -23,6 +30,16 @@ def separation(ra1,dec1,ra2,dec2):
 
 
 def filter_plane(img, db, hdr):
+    """
+    Model the galactic plane
+    Return the model and residul 
+
+    parameters:
+    img - image array
+    hdr - header info
+    db - class object
+    """
+
     t = wcs.WCS(naxis=2)
     t.wcs.crpix = [img.shape[2]//2, img.shape[3]//2]
     t.wcs.cdelt = [db.header.pixel_size, db.header.pixel_size]

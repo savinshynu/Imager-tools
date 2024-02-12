@@ -1,10 +1,15 @@
+
+"""
+Scripts to test the calibration of Orville imager
+"""
+import os
+import glob
+import sys
+import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 from sliding_rfi_flagger_man import main
 from lsl import astro
-import glob, os
-import sys
-import h5py
 from scipy.optimize import curve_fit
 from mad import median_absolute_deviation as mad
 from conversion_coord import pix2eq as getcoord, eq2pix as trackcoord

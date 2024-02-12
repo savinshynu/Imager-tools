@@ -1,3 +1,8 @@
+"""
+Module to calculate the ration of power between Cyg and Cas A
+"""
+
+
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt

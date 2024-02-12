@@ -3,19 +3,26 @@ A number of utility functions used in the transient search with Orville
 
 """
 
-
-import numpy as np
-from OrvilleImageDB import OrvilleImageDB
 import sys
-import matplotlib.pyplot as plt
-from lsl import astro
-from conversion_coord import pix2eq as getcoord, eq2pix as trackcoord
 import math
+import numpy as np
+import matplotlib.pyplot as plt
+from OrvilleImageDB import OrvilleImageDB
+from conversion_coord import pix2eq as getcoord, eq2pix as trackcoord
 from twod_gaussian import fitgaussian
 
 
-# fo reading images from a .oims file continuously
+
+
 def read_oims_cont(filename):
+
+    """
+    Reading images from a .oims file continuously
+    Returns images data
+
+    parameter:
+    filename - input .oims file
+    """
 
     db = OrvilleImageDB(filename,'r') #define the image data base
 
@@ -34,7 +41,7 @@ def read_oims_cont(filename):
     time = np.zeros((ints,4))
     data = np.zeros((ints,nchan,4,ngrid,ngrid))
     header = np.zeros((ints,9))
-    for i in xrange(ints):
+    for i in range(ints):
         hdr, dat = db.read_image()
         t = hdr['start_time']
         int_len = hdr['int_len']
@@ -65,17 +72,31 @@ def read_oims_cont(filename):
     return time,data,header
 
 
-def mask_image(im,time,psize,lat,lon,cent_az,cent_alt):
+
+def mask_image(im, time, psize, lat, lon, cent_az, cent_alt):
+
+    """ 
+    Masking steady sources in the image
+    Returns masked image
+
+    Parameters:
+   
+    im - image
+    time -  MJD day, hour, minute, seconds, float  
+    psize - pixel size,  in degrees 
+    cent_az, cent_alt - phase center values in degrees 
+    lat, lon - station coordinates, in degrees
+    """
 
     dat_im = im
+    
     # mask for the horizon
-
     A = np.ones((dat_im.shape[0],dat_im.shape[1]))
-    for a in xrange(A.shape[0]):
-        for b in xrange(A.shape[1]):
+    for a in range(A.shape[0]):
+        for b in range(A.shape[1]):
             if (float(a)-(A.shape[0]/2.0))**2 + (float(b)-(A.shape[0]/2.0))**2 >  ((180*np.cos(25*(np.pi/180.0)))/(np.pi*psize))**2: #(180* cos(theta)/(np.pi * psize)
                 A[a,b] = 0
-
+    
     sp =  astro.get_solar_equ_coords(time[0,0] + (time[1,0] + (time[2,0] + time[3,0]/60.0)/60.0)/24.0  + 2400000.5)
     Sunra = sp[0]
     Sundec = sp[1]
@@ -83,21 +104,66 @@ def mask_image(im,time,psize,lat,lon,cent_az,cent_alt):
     badra = np.array((83.633,350.85,299.868,187.706,139.52375,252.78375,Sunra,69.28,49.94,187.3,123.4,211.2,150.5,176.3,147,24.42,261.2,277.4,140.3,247.2))
     baddec = np.array((22.0145,58.815,40.734,12.391,-12.0956,4.9925,Sundec,29.6,41.51,2.049,48.21,51.96,28.79,31.26,7.421,33.16,-0.9939,48.75,45.67,39.55))
 
-    for source in xrange(badra.shape[0]):
+    for source in range(badra.shape[0]):
 
         x,y,Att = trackcoord(badra[source],baddec[source],time[0,:],time[1,:],time[2,:],time[3,:],A.shape[0],psize,lat,lon,cent_az,cent_alt)
         #x = int(np.round(x))
         #y = int(np.round(y))
+        print(x,y)
         if Att > 0:
            xa,ya = maxi_unsub(dat_im,x,y) 
            dat_im[xa-6:xa+7,ya-6:ya+7] = 0
 
     dat_im_nohrz = dat_im*A
-    return dat_im,dat_im_nohrz 
+    return dat_im,dat_im_nohrz
 
-#finding peak pixel in a  subtracted image
-def maxi_sub(data,x_in,y_in):
+def mask_image_without_sun(im, time, psize, lat, lon, cent_az, cent_alt):
+    
+    """ 
+    Masking steady sources in the image except Sun
+    Returns masked image
 
+    Parameters:
+   
+    im - image
+    time -  MJD day, hour, minute, seconds, float  
+    psize - pixel size,  in degrees 
+    cent_az, cent_alt - phase center values in degrees 
+    lat, lon - station coordinates, in degrees
+    """
+
+    dat_im = im
+    
+    # mask for the horizon
+    A = np.ones((dat_im.shape[0],dat_im.shape[1]))
+    for a in range(A.shape[0]):
+        for b in range(A.shape[1]):
+            if (float(a)-(A.shape[0]/2.0))**2 + (float(b)-(A.shape[0]/2.0))**2 >  ((180*np.cos(25*(np.pi/180.0)))/(np.pi*psize))**2: #(180* cos(theta)/(np.pi * psize)
+                A[a,b] = 0
+
+
+    badra = np.array((83.633,350.85,299.868,187.706,139.52375,252.78375,69.28,49.94,187.3,123.4,211.2,150.5,176.3,147,24.42,261.2,277.4,140.3,247.2))
+    baddec = np.array((22.0145,58.815,40.734,12.391,-12.0956,4.9925,29.6,41.51,2.049,48.21,51.96,28.79,31.26,7.421,33.16,-0.9939,48.75,45.67,39.55))
+
+    for source in range(badra.shape[0]):
+
+        x,y,Att = trackcoord(badra[source],baddec[source],time[0],time[1],time[2],time[3],A.shape[0],psize,lat,lon,cent_az,cent_alt)
+        
+        if Att > 0:
+           xa,ya = maxi_unsub(dat_im,x,y) 
+           dat_im[xa-6:xa+7,ya-6:ya+7] = 0
+
+    dat_im_nohrz = dat_im*A
+    return dat_im,dat_im_nohrz
+
+#
+def maxi_sub(data, x_in, y_in):
+    """
+    finding peak pixel in the subtracted image
+    Returns pixel coordinates
+    parameters:
+    x_in, y_in - pixel values
+    """
 
     x_in=int(x_in)
     y_in=int(y_in)
@@ -116,7 +182,12 @@ def maxi_sub(data,x_in,y_in):
 #finding peak pixel in a unsubtracted image
 
 def maxi_unsub(data,x_in,y_in):
-
+    """
+    finding peak pixel in the unsubtracted image
+    Returns pixel coordinates
+    parameters:
+    x_in, y_in - pixel values
+    """
 
     x_in=int(x_in)
     y_in=int(y_in)
@@ -132,9 +203,13 @@ def maxi_unsub(data,x_in,y_in):
 
     return x1,y1
 
-# time from mjd day
-def mjd2ut(t):
 
+def mjd2ut(t):
+    """
+    time from mjd day in fractions
+    Parameters:
+    t - t in MJD data fraction
+    """
     MJD = int(t)
     h = 24.0*(t - float(MJD))
     H = int(h)
@@ -145,10 +220,18 @@ def mjd2ut(t):
 
     return MJD, H, M, S
 
-#for finding an annulus around a point in sky and subtracting the sky contribution for a single channel data
+
 
 def avgp_test(xpix,ypix,data):
-
+    """
+    Finding an annulus around a point in sky and subtracting the sky contribution for a single channel data
+    Return Annulus values subracted from the peak
+    
+    Parameters:
+    xpix - initial x position
+    ypix - initial y position
+    data - 2 D image
+    """
     xpix=int(xpix)
     ypix=int(ypix)
     sum1 = np.sum(data[xpix-4:xpix+5,ypix-4:ypix+5])
@@ -160,6 +243,16 @@ def avgp_test(xpix,ypix,data):
     
     
 def avgp_med(xpix,ypix,data):
+
+    """
+    Finding an annulus around a point in sky and subtracting the sky contribution for a single channel data
+    Return Annulus values (median) subracted from the peak
+    
+    Parameters:
+    xpix - initial x position
+    ypix - initial y position
+    data - 2 D image
+    """
 
     xpix=int(xpix)
     ypix=int(ypix)
@@ -175,6 +268,16 @@ def avgp_med(xpix,ypix,data):
 
 
 def avgp(xpix,ypix,data):
+
+    """
+    Finding an annulus around a point in sky and subtracting the sky contribution for a single channel data
+    Return Annulus values subracted from the peak
+    
+    Parameters:
+    xpix - initial x position
+    ypix - initial y position
+    data - 2 D image
+    """
 
     xpix=int(xpix)
     ypix=int(ypix)
@@ -286,6 +389,12 @@ def avgp_chan_eq(ra,dec,chan_info,annul_info,data):
 
 #function to determine the angular distance between two points (ra1,dec1) and (ra2,dec2) given all of them are in degrees
 def ang_dist(ra1,dec1,ra2,dec2):
+    """
+    Returns angular distance between points
+    parameters:
+    ra1, dec1 - beginning RA and dec values
+    ra2, dec2  - ending RA and dec values
+    """
     x = np.sin(dec1*(np.pi/180.0))*np.sin(dec2*(np.pi/180.0))
     y = np.cos(dec1*(np.pi/180.0))*np.cos(dec2*(np.pi/180.0))*np.cos((ra1-ra2)*(np.pi/180.0))
     z = x + y
@@ -294,6 +403,12 @@ def ang_dist(ra1,dec1,ra2,dec2):
 
 
 def ang_dist_pix(x1,y1,x2,y2):
+    """
+    Returns angular distance between points on a sphere
+    parameters:
+    x1, y1 - beginning values
+    x2, y2  - ending values
+    """
     a = np.sin(y1*(np.pi/180.0))*np.sin(y2*(np.pi/180.0))
     b = np.cos(y1*(np.pi/180.0))*np.cos(y2*(np.pi/180.0))*np.cos((x1-x2)*(np.pi/180.0))
     z=a+b

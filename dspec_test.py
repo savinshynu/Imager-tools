@@ -1,3 +1,7 @@
+"""
+Script used for testing the power ration of Cas A and Cyg A
+"""
+
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt

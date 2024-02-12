@@ -1,3 +1,8 @@
+"""
+Modules to test the narrowband RFI flagging
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from sliding_rfi_flagger_man import main
